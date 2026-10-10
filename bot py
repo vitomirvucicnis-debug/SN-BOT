@@ -1,0 +1,58 @@
+
+import os
+import random
+import discord
+from discord.ext import commands
+from discord import app_commands
+
+intents = discord.Intents.default()
+intents.members = True
+
+bot = commands.Bot(command_prefix="!", intents=intents)
+
+balances = {}
+
+@bot.event
+async def on_ready():
+    await bot.tree.sync()
+    print(f"{bot.user} is ONLINE!")
+
+@bot.event
+async def on_member_join(member):
+    if member.guild.system_channel:
+        await member.guild.system_channel.send(
+            f"👋 Welcome {member.mention} to SN! 🎉"
+        )
+
+@bot.tree.command(name="balance", description="Check your SN Tokens")
+async def balance(interaction: discord.Interaction):
+    tokens = balances.get(interaction.user.id, 0)
+    await interaction.response.send_message(
+        f"💰 You have {tokens} SN Tokens!"
+    )
+
+@bot.tree.command(name="daily", description="Claim your SN Tokens")
+async def daily(interaction: discord.Interaction):
+    user = interaction.user.id
+    balances[user] = balances.get(user, 0) + 100
+    await interaction.response.send_message(
+        "🎁 You received 100 SN Tokens!"
+    )
+
+@bot.tree.command(name="work", description="Work for SN Tokens")
+async def work(interaction: discord.Interaction):
+    earned = random.randint(20, 100)
+    user = interaction.user.id
+    balances[user] = balances.get(user, 0) + earned
+    await interaction.response.send_message(
+        f"💼 You earned {earned} SN Tokens!"
+    )
+
+@bot.tree.command(name="ping", description="Check bot status")
+async def ping(interaction: discord.Interaction):
+    await interaction.response.send_message("🏓 SN BOT is online!")
+
+token = os.environ.get("DISCORD_TOKEN")
+if not token:
+    raise RuntimeError("Set DISCORD_TOKEN in your host's secrets.")
+bot.run(token)
